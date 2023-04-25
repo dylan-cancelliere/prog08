@@ -258,3 +258,32 @@ void printfinalstats(void) {
 void avoid_unpleasant_compiler_warnings(void) {
     (void)visitroots;
 }
+
+
+/*
+Psuedocode for mark algorithm:
+todo = {roots}
+while todo is not empty:
+    v = todo.next()
+    if v is not marked:
+        mark v
+        for each pointer in v
+            todo.add(pointer)
+
+Challenges:
+1. How do we find all of the roots and non-roots?
+2. How do we know if an object is being used?
+    a. Will this differ per type?
+
+Psuedocode for sweep algorithm
+p = heapStart
+while p < heapEnd:
+    if p is marked:
+        unmark(p)
+    else:
+        free(p) // ie 'sweep' or unallocate value at p
+    p = p.next()
+
+Challenges:
+1. How do we progress through the heap?
+*/
