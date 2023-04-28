@@ -89,8 +89,12 @@ void sweep(){
 }
 
 static void printStats(){
-    printf("[GC stats: heap size %d live data %d] \n", nmarks, nlive);
-    
+
+    int tempMarks = nmarks;
+    int tempLive = nlive;
+    printf("[GC stats: heap size %d live data %d] \n", tempMarks , tempLive);
+    nmarks = 0;
+    nlive = 0;
 }
 
 /* ms.c ((prototype)) 268b */
@@ -98,6 +102,7 @@ Value* allocloc(void) {
     sweep();
     if (hp == heaplimit) {
         visitroots();
+        printStats();
         if (pagelist != NULL) makecurrent(pagelist);
         sweep();
         if (hp == heaplimit){
@@ -106,7 +111,6 @@ Value* allocloc(void) {
     }
     assert(hp < heaplimit);
     gc_debug_pre_allocate(&hp->v);
-    printStats();
     return &(hp++)->v;
 }
 /* ms.c 269b */
