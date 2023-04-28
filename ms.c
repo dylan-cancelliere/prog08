@@ -70,16 +70,20 @@ static void addpage(void) {
     heapsize += GROWTH_UNIT;   /* OMIT */
 }
 
-Mvalue* sweep(){
+void sweep(){
     while (hp < heaplimit) {
         if (hp->live) {
             hp->live = 0;
             hp++;
         } else {
-            return hp;
+            hp->v.alt = INVALID;
+            return;
         }
     }
-    return hp;
+    if (curpage != NULL && curpage->tl != NULL){
+        makecurrent(curpage->tl);
+        sweep();
+    }
 }
 
 /* ms.c ((prototype)) 268b */
@@ -87,6 +91,7 @@ Value* allocloc(void) {
     sweep();
     if (hp == heaplimit) {
         visitroots();
+        if (pagelist != NULL) makecurrent(pagelist);
         sweep();
         if (hp == heaplimit){
             addpage();
