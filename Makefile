@@ -15,7 +15,9 @@ HEADERS  = all.h prim.h
 OBJECTS  = $(SOURCES:.c=.o)
 RESULT   = uscheme-ms
 
-CC = gcc -std=c11 -pedantic -Wall -Werror -Wextra -Wno-overlength-strings -Wno-dangling-pointer
+all: uscheme-ms
+
+CC = gcc -std=c11 -pedantic -Wall -Werror -Wextra -Wno-overlength-strings
 CFLAGS = -g 
 LDFLAGS = -g
 CPPFLAGS = -I. -DNOVALGRIND

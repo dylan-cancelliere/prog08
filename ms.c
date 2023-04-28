@@ -21,6 +21,7 @@ struct Page {
 Page *pagelist, *curpage;
 Mvalue *hp, *heaplimit;
 /* private declarations for mark-and-sweep collection 268c */
+static void markAndSweep      (void);
 static void visitloc          (Value *loc);
 static void visitvalue        (Value v);
 static void visitenv          (Env env);
@@ -41,6 +42,7 @@ static int nmarks;              /* total number of cells marked */
 bool gc_uses_mark_bits = true;
 /* ms.c 267e */
 static void makecurrent(Page *page) {
+    // THIS CODE GETS CALLED
     assert(page != NULL);
     curpage = page;
     hp = &page->pool[0];
@@ -49,6 +51,7 @@ static void makecurrent(Page *page) {
 /* ms.c 268a */
 static int heapsize;            /* OMIT */
 static void addpage(void) {
+    // THIS CODE GETS CALLED
     Page *page = calloc(1, sizeof(*page));
     assert(page != NULL);
 
@@ -69,7 +72,9 @@ static void addpage(void) {
 }
 /* ms.c ((prototype)) 268b */
 Value* allocloc(void) {
+    markAndSweep();
     if (hp == heaplimit)
+    // THIS CODE GETS CALLED
         addpage();
     assert(hp < heaplimit);
 
@@ -252,11 +257,21 @@ static void visitroots(void) {
 /* you need to redefine these functions */
 void printfinalstats(void) { 
   (void)nalloc; (void)ncollections; (void)nmarks;
-  assert(0); 
+//   assert(0); 
 }
 /* ms.c ((prototype)) S377h */
 void avoid_unpleasant_compiler_warnings(void) {
     (void)visitroots;
+}
+
+void markAndSweep(){
+    if (pagelist == NULL) return;
+    visitroots(); //mark
+    while (hp < heaplimit){  //sweep
+        if (hp->live) hp->live = 0;
+        else free(hp);
+        hp++;
+    }
 }
 
 

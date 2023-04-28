@@ -1,0 +1,9 @@
+*.o
+.vscode
+test.sh
+test.sh~
+uscheme-ms
+.idea
+.gitignore~
+testinput
+Makefile
