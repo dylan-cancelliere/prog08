@@ -21,7 +21,6 @@ struct Page {
 Page *pagelist, *curpage;
 Mvalue *hp, *heaplimit;
 /* private declarations for mark-and-sweep collection 268c */
-static void markAndSweep      (void);
 static void visitloc          (Value *loc);
 static void visitvalue        (Value v);
 static void visitenv          (Env env);
@@ -70,15 +69,30 @@ static void addpage(void) {
     makecurrent(page);
     heapsize += GROWTH_UNIT;   /* OMIT */
 }
+
+Mvalue* sweep(){
+    while (hp < heaplimit) {
+        if (hp->live) {
+            hp->live = 0;
+            hp++;
+        } else {
+            return hp;
+        }
+    }
+    return hp;
+}
+
 /* ms.c ((prototype)) 268b */
 Value* allocloc(void) {
-    markAndSweep();
-    if (hp == heaplimit)
-    // THIS CODE GETS CALLED
-        addpage();
+    sweep();
+    if (hp == heaplimit) {
+        visitroots();
+        sweep();
+        if (hp == heaplimit){
+            addpage();
+        }
+    }
     assert(hp < heaplimit);
-
-/* tell the debugging interface that [[&hp->v]] is about to be allocated 282e */
     gc_debug_pre_allocate(&hp->v);
     return &(hp++)->v;
 }
@@ -264,17 +278,6 @@ void avoid_unpleasant_compiler_warnings(void) {
     (void)visitroots;
 }
 
-void markAndSweep(){
-    if (pagelist == NULL) return;
-    visitroots(); //mark
-    while (hp < heaplimit){  //sweep
-        if (hp->live) hp->live = 0;
-        else free(hp);
-        hp++;
-    }
-}
-
-
 /*
 Psuedocode for mark algorithm:
 todo = {roots}
@@ -298,7 +301,4 @@ while p < heapEnd:
     else:
         free(p) // ie 'sweep' or unallocate value at p
     p = p.next()
-
-Challenges:
-1. How do we progress through the heap?
 */
