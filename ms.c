@@ -37,6 +37,7 @@ static void visitroots        (void);
 static int nalloc;              /* total number of allocations */
 static int ncollections;        /* total number of collections */
 static int nmarks;              /* total number of cells marked */
+static int nlive;               /* total number of live data */
 /* ms.c 267b */
 bool gc_uses_mark_bits = true;
 /* ms.c 267e */
@@ -74,6 +75,7 @@ void sweep(){
     while (hp < heaplimit) {
         if (hp->live) {
             hp->live = 0;
+            nlive--;
             hp++;
         } else {
             hp->v.alt = INVALID;
@@ -84,6 +86,11 @@ void sweep(){
         makecurrent(curpage->tl);
         sweep();
     }
+}
+
+static void printStats(){
+    printf("[GC stats: heap size %d live data %d] \n", nmarks, nlive);
+    
 }
 
 /* ms.c ((prototype)) 268b */
@@ -99,6 +106,7 @@ Value* allocloc(void) {
     }
     assert(hp < heaplimit);
     gc_debug_pre_allocate(&hp->v);
+    printStats();
     return &(hp++)->v;
 }
 /* ms.c 269b */
@@ -111,6 +119,8 @@ static void visitloc(Value *loc) {
     Mvalue *m = (Mvalue*) loc;
     if (!m->live) {
         m->live = 1;
+        nmarks++; 
+        nlive++;
         visitvalue(m->v);
     }
 }
