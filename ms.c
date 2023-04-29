@@ -75,7 +75,6 @@ void sweep(){
     while (hp < heaplimit) {
         if (hp->live) {
             hp->live = 0;
-            nlive--;
             hp++;
         } else {
             hp->v.alt = INVALID;
@@ -88,11 +87,8 @@ void sweep(){
     }
 }
 
-static void printStats(){
-
-    int tempMarks = nmarks;
-    int tempLive = nlive;
-    printf("[GC stats: heap size %d live data %d] \n", tempMarks , tempLive);
+void printStats(){
+    printf("[GC stats: heap size %d live data %d] \n", nmarks , nlive);
     nmarks = 0;
     nlive = 0;
 }
