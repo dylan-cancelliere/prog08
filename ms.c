@@ -38,6 +38,7 @@ static int nalloc;              /* total number of allocations */
 static int ncollections;        /* total number of collections */
 static int nmarks;              /* total number of cells marked */
 static int nlive;               /* total number of live data */
+static int printCount;          /* counter for print statements */
 /* ms.c 267b */
 bool gc_uses_mark_bits = true;
 /* ms.c 267e */
@@ -88,9 +89,17 @@ void sweep(){
 }
 
 void printStats(){
-    printf("[GC stats: heap size %d live data %d] \n", nmarks , nlive);
-    nmarks = 0;
+    float ratio = (float) heapsize / nlive;
+    printf("[GC stats: heap size %d live data %d ratio %.2f] \n", heapsize, nlive, ratio);
+    nmarks += nlive;
     nlive = 0;
+    if(printCount == 10){
+        float ratio1 = (float) nalloc / heapsize;
+        printf("[Mem stats: allocated %d heap size %d ratio %.2f] \n", nalloc, heapsize, ratio1);
+        printCount = 0;
+    }
+    printCount++;
+    ncollections++;
 }
 
 /* ms.c ((prototype)) 268b */
@@ -107,6 +116,7 @@ Value* allocloc(void) {
     }
     assert(hp < heaplimit);
     gc_debug_pre_allocate(&hp->v);
+    nalloc++;
     return &(hp++)->v;
 }
 /* ms.c 269b */
@@ -118,8 +128,7 @@ static void visitenv(Env env) {
 static void visitloc(Value *loc) {
     Mvalue *m = (Mvalue*) loc;
     if (!m->live) {
-        m->live = 1;
-        nmarks++; 
+        m->live = 1; 
         nlive++;
         visitvalue(m->v);
     }
@@ -285,8 +294,11 @@ static void visitroots(void) {
 /* ms.c ((prototype)) S377g */
 /* you need to redefine these functions */
 void printfinalstats(void) { 
-  (void)nalloc; (void)ncollections; (void)nmarks;
-//   assert(0); 
+    float ratio1 = (float) nalloc / heapsize;
+    ncollections--;
+    float ratio2 = (float) nmarks / nalloc;
+    printf("[Mem stats: allocated %d heap size %d ratio %.2f] \n", nalloc, heapsize, ratio1);
+    printf("[Total GC work: %d collections marked %d objects; %.2f marks/allocation] \n ", ncollections, nmarks, ratio2); 
 }
 /* ms.c ((prototype)) S377h */
 void avoid_unpleasant_compiler_warnings(void) {
